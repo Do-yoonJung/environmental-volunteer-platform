@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --porcelain: #f1efe7;
+  --beige: #d8c7a1;
+  --pearl-leaf: #b8c5a1;
+  --carbon-block: #2b3b39;
+  --onyx: #171b1a;
+  --soft-cream: #fbf9f4;
+  --muted-text: #4d524f;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: var(--porcelain);
+  color: var(--onyx);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
+}
+
