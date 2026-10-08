@@ -28,5 +28,8 @@
     "sinon": "^19.0.2"
   },
   "author": "IFN636 Group4",
-  "license": "ISC"
+  "license": "ISC",
+  "allowScripts": {
+    "bcrypt@5.1.1": true
+  }
 }
