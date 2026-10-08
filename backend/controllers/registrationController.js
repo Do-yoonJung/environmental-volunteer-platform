@@ -1,7 +1,7 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 
-const registerForEvent = async (req, res) => {
+const registerForEvent = async (req, res, notificationService) => {
     try {
         const eventId = req.params.eventId;
 
@@ -34,6 +34,13 @@ const registerForEvent = async (req, res) => {
             registration.status = 'registered';
             await registration.save();
 
+            await notifyRegistrationConfirmed(
+                notificationService,
+                registration,
+                event,
+                req.user
+            );
+
             return res.status(200).json(registration);
         }
 
@@ -43,12 +50,40 @@ const registerForEvent = async (req, res) => {
             status: 'registered'
         });
 
+        await notifyRegistrationConfirmed(
+            notificationService,
+            registration,
+            event,
+            req.user
+        );
+
         res.status(201).json(registration);
 
     } catch (error) {
         res.status(500).json({
             message: error.message
         });
+    }
+};
+
+const notifyRegistrationConfirmed = async (
+    notificationService,
+    registration,
+    event,
+    volunteer
+) => {
+    try {
+        if (!notificationService) {
+            throw new Error('Notification service is not configured');
+        }
+
+        await notificationService.notifyRegistrationConfirmed({
+            ...registration.toObject(),
+            eventId: event,
+            volunteerId: volunteer
+        });
+    } catch (error) {
+        console.error('Registration succeeded, but confirmation notification failed', error);
     }
 };
 

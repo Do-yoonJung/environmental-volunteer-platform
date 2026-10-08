@@ -1,26 +1,27 @@
 const express = require('express');
 
-const {
-    registerForEvent,
-    cancelRegistration,
-    getMyRegistrations,
-    getEventRegistrations
-} = require('../controllers/registrationController');
+const registrationController = require('../controllers/registrationController');
 
 const { protect } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+const createRegistrationRoutes = (notificationService) => {
+    const router = express.Router();
 
-// Volunteer: view own registrations
-router.get('/me', protect, getMyRegistrations);
+    // Volunteer: view own registrations
+    router.get('/me', protect, registrationController.getMyRegistrations);
 
-// Coordinator: view registered volunteers for own event
-router.get('/event/:eventId', protect, getEventRegistrations);
+    // Coordinator: view registered volunteers for own event
+    router.get('/event/:eventId', protect, registrationController.getEventRegistrations);
 
-// Volunteer: register for event
-router.post('/:eventId', protect, registerForEvent);
+    // Volunteer: register for event
+    router.post('/:eventId', protect, (req, res) => (
+        registrationController.registerForEvent(req, res, notificationService)
+    ));
 
-// Volunteer: cancel registration
-router.put('/:eventId/cancel', protect, cancelRegistration);
+    // Volunteer: cancel registration
+    router.put('/:eventId/cancel', protect, registrationController.cancelRegistration);
 
-module.exports = router;
+    return router;
+};
+
+module.exports = createRegistrationRoutes;
