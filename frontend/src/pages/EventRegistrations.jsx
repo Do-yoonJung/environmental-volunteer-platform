@@ -39,34 +39,52 @@ const EventRegistrations = () => {
     fetchRegistrations();
   }, [eventId, user, navigate]);
 
-  const recordAttendance = async (volunteerId, status) => {
+  const saveAttendance = async (registration, status) => {
     try {
-      const response = await axiosInstance.post(
-        `/api/attendance/${eventId}/${volunteerId}`,
-        {
-          status,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
+      const volunteerId = registration.volunteerId._id;
+
+      let response;
+
+      if (registration.attendanceStatus) {
+        response = await axiosInstance.put(
+          `/api/attendance/${eventId}/${volunteerId}`,
+          {
+            status,
           },
-        }
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+      } else {
+        response = await axiosInstance.post(
+          `/api/attendance/${eventId}/${volunteerId}`,
+          {
+            status,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+      }
 
       setRegistrations((currentRegistrations) =>
-        currentRegistrations.map((registration) =>
-          registration.volunteerId?._id === volunteerId
+        currentRegistrations.map((currentRegistration) =>
+          currentRegistration.volunteerId?._id === volunteerId
             ? {
-                ...registration,
+                ...currentRegistration,
                 attendanceStatus: response.data.status,
               }
-            : registration
+            : currentRegistration
         )
       );
     } catch (error) {
       const message =
         error.response?.data?.message ||
-        'Failed to record attendance.';
+        'Failed to save attendance.';
 
       alert(message);
     }
@@ -83,7 +101,6 @@ const EventRegistrations = () => {
   return (
     <div className="container mx-auto p-6 min-h-screen bg-[var(--porcelain)]">
       <div className="bg-[var(--soft-cream)] p-6 rounded shadow-sm border border-[var(--pearl-leaf)]">
-
         <h1 className="text-2xl font-bold text-[var(--carbon-block)] mb-6">
           Attendance Management
         </h1>
@@ -93,64 +110,81 @@ const EventRegistrations = () => {
             No volunteers are currently registered for this event.
           </p>
         ) : (
-          <div>
-            {registrations.map((registration) => (
-              <div
-                key={registration._id}
-                className="bg-white p-4 mb-3 rounded border border-[var(--pearl-leaf)]"
-              >
-                <p className="font-bold text-[var(--carbon-block)]">
-                  {registration.volunteerId?.name}
-                </p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse bg-white">
+              <thead>
+                <tr className="border-b border-[var(--pearl-leaf)]">
+                  <th className="text-left p-3">Name</th>
+                  <th className="text-left p-3">Email</th>
+                  <th className="text-left p-3">University</th>
+                  <th className="text-left p-3">Attendance Status</th>
+                  <th className="text-left p-3">Action</th>
+                </tr>
+              </thead>
 
-                <p className="text-[var(--onyx)]">
-                  {registration.volunteerId?.email}
-                </p>
+              <tbody>
+                {registrations.map((registration) => (
+                  <tr
+                    key={registration._id}
+                    className="border-b border-[var(--pearl-leaf)]"
+                  >
+                    <td className="p-3">
+                      {registration.volunteerId?.name}
+                    </td>
 
-                {registration.volunteerId?.university && (
-                  <p className="text-sm text-[var(--muted-text)]">
-                    University: {registration.volunteerId.university}
-                  </p>
-                )}
+                    <td className="p-3">
+                      {registration.volunteerId?.email}
+                    </td>
 
-                <p className="text-sm text-[var(--muted-text)] mt-2">
-                  Attendance Status:{' '}
-                  {registration.attendanceStatus
-                    ? registration.attendanceStatus === 'present'
-                      ? 'Present'
-                      : 'Absent'
-                    : '-'}
-                </p>
+                    <td className="p-3">
+                      {registration.volunteerId?.university || '-'}
+                    </td>
 
-                {!registration.attendanceStatus && (
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      onClick={() =>
-                        recordAttendance(
-                          registration.volunteerId._id,
-                          'present'
-                        )
-                      }
-                      className="px-3 py-2 rounded border border-[var(--pearl-leaf)] hover:opacity-80"
-                    >
-                      Present
-                    </button>
+                    <td className="p-3">
+                      {registration.attendanceStatus
+                        ? registration.attendanceStatus === 'present'
+                          ? 'Present'
+                          : 'Absent'
+                        : '-'}
+                    </td>
 
-                    <button
-                      onClick={() =>
-                        recordAttendance(
-                          registration.volunteerId._id,
-                          'absent'
-                        )
-                      }
-                      className="px-3 py-2 rounded border border-[var(--pearl-leaf)] hover:opacity-80"
-                    >
-                      Absent
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+                    <td className="p-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            saveAttendance(
+                              registration,
+                              'present'
+                            )
+                          }
+                          disabled={
+                            registration.attendanceStatus === 'present'
+                          }
+                          className="px-3 py-2 rounded border border-[var(--pearl-leaf)] disabled:opacity-50"
+                        >
+                          Present
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            saveAttendance(
+                              registration,
+                              'absent'
+                            )
+                          }
+                          disabled={
+                            registration.attendanceStatus === 'absent'
+                          }
+                          className="px-3 py-2 rounded border border-[var(--pearl-leaf)] disabled:opacity-50"
+                        >
+                          Absent
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
@@ -160,7 +194,6 @@ const EventRegistrations = () => {
         >
           Back to Events
         </button>
-
       </div>
     </div>
   );
