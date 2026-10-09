@@ -39,10 +39,43 @@ const EventRegistrations = () => {
     fetchRegistrations();
   }, [eventId, user, navigate]);
 
+  const recordAttendance = async (volunteerId, status) => {
+    try {
+      const response = await axiosInstance.post(
+        `/api/attendance/${eventId}/${volunteerId}`,
+        {
+          status,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      setRegistrations((currentRegistrations) =>
+        currentRegistrations.map((registration) =>
+          registration.volunteerId?._id === volunteerId
+            ? {
+                ...registration,
+                attendanceStatus: response.data.status,
+              }
+            : registration
+        )
+      );
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        'Failed to record attendance.';
+
+      alert(message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <p>Loading registrations...</p>
+        <p>Loading attendance...</p>
       </div>
     );
   }
@@ -78,6 +111,43 @@ const EventRegistrations = () => {
                   <p className="text-sm text-[var(--muted-text)]">
                     University: {registration.volunteerId.university}
                   </p>
+                )}
+
+                <p className="text-sm text-[var(--muted-text)] mt-2">
+                  Attendance Status:{' '}
+                  {registration.attendanceStatus
+                    ? registration.attendanceStatus === 'present'
+                      ? 'Present'
+                      : 'Absent'
+                    : '-'}
+                </p>
+
+                {!registration.attendanceStatus && (
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() =>
+                        recordAttendance(
+                          registration.volunteerId._id,
+                          'present'
+                        )
+                      }
+                      className="px-3 py-2 rounded border border-[var(--pearl-leaf)] hover:opacity-80"
+                    >
+                      Present
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        recordAttendance(
+                          registration.volunteerId._id,
+                          'absent'
+                        )
+                      }
+                      className="px-3 py-2 rounded border border-[var(--pearl-leaf)] hover:opacity-80"
+                    >
+                      Absent
+                    </button>
+                  </div>
                 )}
               </div>
             ))}

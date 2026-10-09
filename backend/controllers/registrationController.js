@@ -1,5 +1,6 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
+const Attendance = require('../models/Attendance');
 
 const registerForEvent = async (req, res) => {
     try {
@@ -141,7 +142,24 @@ const getEventRegistrations = async (req, res) => {
             'name email university address'
         );
 
-        res.json(registrations);
+        const attendances = await Attendance.find({
+            eventId
+        });
+
+        const result = registrations.map((registration) => {
+            const attendance = attendances.find(
+                (item) =>
+                item.volunteerId.toString() ===
+                registration.volunteerId._id.toString()
+            );
+
+            return {
+                ...registration.toObject(),
+                attendanceStatus: attendance ? attendance.status : null
+            };
+        });
+
+res.json(result);
 
     } catch (error) {
         res.status(500).json({
