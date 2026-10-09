@@ -7,12 +7,6 @@ const recordAttendance = async (req, res) => {
     const { eventId, volunteerId } = req.params;
     const { status } = req.body;
 
-    if (req.user.role !== 'coordinator') {
-      return res.status(403).json({
-        message: 'Coordinator access only'
-      });
-    }
-
     if (!['present', 'absent'].includes(status)) {
       return res.status(400).json({
         message: 'Attendance status must be present or absent'
@@ -27,45 +21,54 @@ const recordAttendance = async (req, res) => {
       });
     }
 
-    if (event.userId.toString() !== req.user.id.toString()) {
+    if (
+      event.userId.toString() !==
+      req.user.id.toString()
+    ) {
       return res.status(403).json({
-        message: 'Not authorized to manage attendance for this event'
+        message:
+          'Not authorized to manage attendance for this event'
       });
     }
 
-    const registration = await Registration.findOne({
-      eventId,
-      volunteerId,
-      status: 'registered'
-    });
+    const registration =
+      await Registration.findOne({
+        eventId,
+        volunteerId,
+        status: 'registered'
+      });
 
     if (!registration) {
       return res.status(400).json({
-        message: 'Volunteer is not actively registered for this event'
+        message:
+          'Volunteer is not actively registered for this event'
       });
     }
 
-    const existingAttendance = await Attendance.findOne({
-      eventId,
-      volunteerId
-    });
+    const existingAttendance =
+      await Attendance.findOne({
+        eventId,
+        volunteerId
+      });
 
     if (existingAttendance) {
       return res.status(400).json({
-        message: 'Attendance has already been recorded for this volunteer'
+        message:
+          'Attendance has already been recorded for this volunteer'
       });
     }
 
-    const attendance = await Attendance.create({
-      eventId,
-      volunteerId,
-      status
-    });
+    const attendance =
+      await Attendance.create({
+        eventId,
+        volunteerId,
+        status
+      });
 
-    res.status(201).json(attendance);
+    return res.status(201).json(attendance);
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message
     });
   }
@@ -76,12 +79,6 @@ const updateAttendance = async (req, res) => {
     const { eventId, volunteerId } = req.params;
     const { status } = req.body;
 
-    if (req.user.role !== 'coordinator') {
-      return res.status(403).json({
-        message: 'Coordinator access only'
-      });
-    }
-
     if (!['present', 'absent'].includes(status)) {
       return res.status(400).json({
         message: 'Attendance status must be present or absent'
@@ -96,28 +93,35 @@ const updateAttendance = async (req, res) => {
       });
     }
 
-    if (event.userId.toString() !== req.user.id.toString()) {
+    if (
+      event.userId.toString() !==
+      req.user.id.toString()
+    ) {
       return res.status(403).json({
-        message: 'Not authorized to manage attendance for this event'
+        message:
+          'Not authorized to manage attendance for this event'
       });
     }
 
-    const registration = await Registration.findOne({
-      eventId,
-      volunteerId,
-      status: 'registered'
-    });
+    const registration =
+      await Registration.findOne({
+        eventId,
+        volunteerId,
+        status: 'registered'
+      });
 
     if (!registration) {
       return res.status(400).json({
-        message: 'Volunteer is not actively registered for this event'
+        message:
+          'Volunteer is not actively registered for this event'
       });
     }
 
-    const attendance = await Attendance.findOne({
-      eventId,
-      volunteerId
-    });
+    const attendance =
+      await Attendance.findOne({
+        eventId,
+        volunteerId
+      });
 
     if (!attendance) {
       return res.status(404).json({
@@ -127,12 +131,13 @@ const updateAttendance = async (req, res) => {
 
     attendance.status = status;
 
-    const updatedAttendance = await attendance.save();
+    const updatedAttendance =
+      await attendance.save();
 
-    res.json(updatedAttendance);
+    return res.json(updatedAttendance);
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message
     });
   }
