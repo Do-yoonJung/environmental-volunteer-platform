@@ -125,7 +125,7 @@ const EventList = ({
                   }
                   className="mr-2 bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
                 >
-                  View Registrations
+                  Manage Attendance
                 </button>
 
                 <button

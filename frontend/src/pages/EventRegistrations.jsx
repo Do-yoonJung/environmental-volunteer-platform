@@ -52,7 +52,7 @@ const EventRegistrations = () => {
       <div className="bg-[var(--soft-cream)] p-6 rounded shadow-sm border border-[var(--pearl-leaf)]">
 
         <h1 className="text-2xl font-bold text-[var(--carbon-block)] mb-6">
-          Registered Volunteers
+          Attendance Management
         </h1>
 
         {registrations.length === 0 ? (
@@ -79,10 +79,6 @@ const EventRegistrations = () => {
                     University: {registration.volunteerId.university}
                   </p>
                 )}
-
-                <p className="text-sm text-[var(--muted-text)] mt-2">
-                  Status: {registration.status}
-                </p>
               </div>
             ))}
           </div>
