@@ -4,14 +4,17 @@ const Event = require('../models/Event');
 const attendanceFacade =
   require('../services/AttendanceFacade');
 
-const registerForEvent = async (req, res) => {
+const registerForEvent = async (
+  req,
+  res,
+  notificationService
+) => {
   try {
     const eventId = req.params.eventId;
 
     if (req.user.role !== 'volunteer') {
       return res.status(403).json({
-        message:
-          'Only volunteers can register for events'
+        message: 'Only volunteers can register for events'
       });
     }
 
@@ -40,7 +43,19 @@ const registerForEvent = async (req, res) => {
       }
 
       registration.status = 'registered';
+
+      // Reset reminder status when a cancelled registration
+      // becomes active again
+      registration.reminderSentAt = null;
+
       await registration.save();
+
+      await notifyRegistrationConfirmed(
+        notificationService,
+        registration,
+        event,
+        req.user
+      );
 
       return res
         .status(200)
@@ -51,8 +66,16 @@ const registerForEvent = async (req, res) => {
       await Registration.create({
         eventId,
         volunteerId: req.user.id,
-        status: 'registered'
+        status: 'registered',
+        reminderSentAt: null
       });
+
+    await notifyRegistrationConfirmed(
+      notificationService,
+      registration,
+      event,
+      req.user
+    );
 
     return res
       .status(201)
@@ -62,6 +85,34 @@ const registerForEvent = async (req, res) => {
     return res.status(500).json({
       message: error.message
     });
+  }
+};
+
+const notifyRegistrationConfirmed = async (
+  notificationService,
+  registration,
+  event,
+  volunteer
+) => {
+  try {
+    if (!notificationService) {
+      throw new Error(
+        'Notification service is not configured'
+      );
+    }
+
+    await notificationService
+      .notifyRegistrationConfirmed({
+        ...registration.toObject(),
+        eventId: event,
+        volunteerId: volunteer
+      });
+
+  } catch (error) {
+    console.error(
+      'Registration succeeded, but confirmation notification failed',
+      error
+    );
   }
 };
 
