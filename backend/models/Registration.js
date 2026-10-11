@@ -18,6 +18,11 @@ const registrationSchema = new mongoose.Schema(
             type: String,
             enum: ['registered', 'cancelled'],
             default: 'registered'
+        },
+
+        reminderSentAt: {
+            type: Date,
+            default: null
         }
     },
     {

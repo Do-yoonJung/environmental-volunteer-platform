@@ -8,10 +8,35 @@ class NotificationService {
     }
 
     async notifyRegistrationConfirmed(registration) {
-        const message = this.templates.registrationConfirmed(registration);
+        const message =
+            this.templates.registrationConfirmed(registration);
+
+        return this.sendWithRetry(
+            message,
+            registration,
+            'registration_confirmed'
+        );
+    }
+
+    async notifyEventReminder(registration) {
+        const message =
+            this.templates.eventReminder(registration);
+
+        return this.sendWithRetry(
+            message,
+            registration,
+            'event_reminder'
+        );
+    }
+
+    async sendWithRetry(message, registration, notificationType) {
         let lastError;
 
-        for (let attempt = 1; attempt <= this.maxAttempts; attempt += 1) {
+        for (
+            let attempt = 1;
+            attempt <= this.maxAttempts;
+            attempt += 1
+        ) {
             let result;
 
             try {
@@ -21,14 +46,19 @@ class NotificationService {
 
                 if (attempt < this.maxAttempts) {
                     await new Promise((resolve) => {
-                        setTimeout(resolve, this.retryDelayMs * (2 ** (attempt - 1)));
+                        setTimeout(
+                            resolve,
+                            this.retryDelayMs *
+                                (2 ** (attempt - 1))
+                        );
                     });
+
                     continue;
                 }
 
                 try {
                     await this.logRepo.record({
-                        type: 'registration_confirmed',
+                        type: notificationType,
                         registrationId: registration._id,
                         recipient: message.to,
                         status: 'failed',
@@ -36,7 +66,10 @@ class NotificationService {
                         error: error.message
                     });
                 } catch (logError) {
-                    console.error('Failed to record notification delivery failure', logError);
+                    console.error(
+                        'Failed to record notification delivery failure',
+                        logError
+                    );
                 }
 
                 throw lastError;
@@ -44,12 +77,14 @@ class NotificationService {
 
             try {
                 await this.logRepo.record({
-                    type: 'registration_confirmed',
+                    type: notificationType,
                     registrationId: registration._id,
                     recipient: message.to,
                     status: 'sent',
                     attempts: attempt,
-                    providerMessageId: result && result.providerMessageId
+                    providerMessageId:
+                        result &&
+                        result.providerMessageId
                 });
             } catch (logError) {
                 console.error(

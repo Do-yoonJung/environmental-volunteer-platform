@@ -43,6 +43,11 @@ const registerForEvent = async (
       }
 
       registration.status = 'registered';
+
+      // Reset reminder status when a cancelled registration
+      // becomes active again
+      registration.reminderSentAt = null;
+
       await registration.save();
 
       await notifyRegistrationConfirmed(
@@ -61,7 +66,8 @@ const registerForEvent = async (
       await Registration.create({
         eventId,
         volunteerId: req.user.id,
-        status: 'registered'
+        status: 'registered',
+        reminderSentAt: null
       });
 
     await notifyRegistrationConfirmed(

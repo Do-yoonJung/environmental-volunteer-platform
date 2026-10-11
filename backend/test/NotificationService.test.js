@@ -52,6 +52,48 @@ describe('NotificationService', () => {
         }]);
     });
 
+    it('sends and records an event reminder', async () => {
+        const sentMessages = [];
+        const logEntries = [];
+        const emailSender = {
+            async send(message) {
+                sentMessages.push(message);
+                return { providerMessageId: 'reminder-123' };
+            }
+        };
+        const logRepo = {
+            async record(entry) {
+                logEntries.push(entry);
+            }
+        };
+        const service = new NotificationService(
+            emailSender,
+            {
+                ...templates,
+                eventReminder: () => ({
+                    to: 'alex@example.com',
+                    subject: 'Event reminder: Park cleanup',
+                    text: 'Reminder'
+                })
+            },
+            logRepo,
+            { retryDelayMs: 0 }
+        );
+
+        await service.notifyEventReminder(registration);
+
+        assert.strictEqual(sentMessages.length, 1);
+        assert.strictEqual(sentMessages[0].to, 'alex@example.com');
+        assert.deepStrictEqual(logEntries, [{
+            type: 'event_reminder',
+            registrationId: 'registration-123',
+            recipient: 'alex@example.com',
+            status: 'sent',
+            attempts: 1,
+            providerMessageId: 'reminder-123'
+        }]);
+    });
+
     it('records the final failure and rejects after exhausting retries', async () => {
         let sendAttempts = 0;
         const logEntries = [];
