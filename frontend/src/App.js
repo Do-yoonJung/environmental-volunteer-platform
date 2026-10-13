@@ -17,6 +17,7 @@ import EditEvent from './pages/EditEvent';
 import EventRegistrations from './pages/EventRegistrations';
 import EventFeedback from './pages/EventFeedback';
 import EventFeedbackList from './pages/EventFeedbackList';
+import EventAnalytics from './pages/EventAnalytics';
 
 function App() {
   return (
@@ -86,6 +87,15 @@ function App() {
           element={
             <CoordinatorRoute>
               <EventFeedbackList />
+            </CoordinatorRoute>
+          }
+        />
+        
+        <Route
+          path="/events/:eventId/analytics"
+          element={
+            <CoordinatorRoute>
+              <EventAnalytics />
             </CoordinatorRoute>
           }
         />
