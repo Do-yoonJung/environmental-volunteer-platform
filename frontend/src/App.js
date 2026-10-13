@@ -16,6 +16,7 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import EventRegistrations from './pages/EventRegistrations';
 import EventFeedback from './pages/EventFeedback';
+import EventFeedbackList from './pages/EventFeedbackList';
 
 function App() {
   return (
@@ -78,6 +79,15 @@ function App() {
         <Route
           path="/events/:eventId/feedback"
           element={<EventFeedback />}
+        />
+
+        <Route
+          path="/events/:eventId/feedback-list"
+          element={
+            <CoordinatorRoute>
+              <EventFeedbackList />
+            </CoordinatorRoute>
+          }
         />
       </Routes>
     </Router>

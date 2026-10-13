@@ -15,7 +15,8 @@ const submitFeedback = async (req, res) => {
       numericRating > 5
     ) {
       return res.status(400).json({
-        message: 'Rating must be an integer between 1 and 5'
+        message:
+          'Rating must be an integer between 1 and 5'
       });
     }
 
@@ -27,10 +28,11 @@ const submitFeedback = async (req, res) => {
       });
     }
 
-    const existingFeedback = await Feedback.findOne({
-      eventId,
-      volunteerId
-    });
+    const existingFeedback =
+      await Feedback.findOne({
+        eventId,
+        volunteerId
+      });
 
     if (existingFeedback) {
       return res.status(400).json({
@@ -50,7 +52,8 @@ const submitFeedback = async (req, res) => {
     });
 
     return res.status(201).json({
-      message: 'Feedback submitted successfully',
+      message:
+        'Feedback submitted successfully',
       feedback
     });
 
@@ -68,6 +71,40 @@ const submitFeedback = async (req, res) => {
   }
 };
 
+const getEventFeedback = async (
+  req,
+  res
+) => {
+  try {
+    const event = req.feedbackEvent;
+
+    const feedback = await Feedback.find({
+      eventId: event._id
+    })
+      .populate(
+        'volunteerId',
+        'name email'
+      )
+      .sort({
+        createdAt: -1
+      });
+
+    return res.json({
+      event: {
+        _id: event._id,
+        title: event.title
+      },
+      feedback
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
-  submitFeedback
+  submitFeedback,
+  getEventFeedback
 };
