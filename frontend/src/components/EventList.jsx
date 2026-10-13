@@ -142,8 +142,7 @@ const EventList = ({
                 : 'No deadline'}
             </p>
 
-            {user?.role ===
-              'coordinator' && (
+            {user?.role === 'coordinator' && (
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   onClick={() =>
@@ -165,6 +164,17 @@ const EventList = ({
                   className="bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
                 >
                   View Feedback
+                </button>
+
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/events/${event._id}/analytics`
+                    )
+                  }
+                  className="bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
+                >
+                  View Analytics
                 </button>
 
                 <button

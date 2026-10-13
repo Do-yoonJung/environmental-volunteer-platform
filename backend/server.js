@@ -102,6 +102,11 @@ app.use(
     require('./routes/feedbackRoutes')
 );
 
+app.use(
+    '/api/analytics',
+    require('./routes/analyticsRoutes')
+);
+
 if (require.main === module) {
     connectDB();
 
