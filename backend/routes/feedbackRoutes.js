@@ -9,9 +9,25 @@ const {
 
 const {
   feedbackEligibility
-} = require('../middleware/feedbackEligibilityMiddleware');
+} = require(
+  '../middleware/feedbackEligibilityMiddleware'
+);
+
+const {
+  feedbackCoordinatorAccess
+} = require(
+  '../middleware/feedbackCoordinatorMiddleware'
+);
 
 const router = express.Router();
+
+// Coordinator: view feedback for an event they manage
+router.get(
+  '/event/:eventId',
+  protect,
+  feedbackCoordinatorAccess,
+  feedbackController.getEventFeedback
+);
 
 // Volunteer: submit feedback for an attended event
 router.post(

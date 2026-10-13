@@ -13,13 +13,20 @@ const EventList = ({
 
   const handleDelete = async (eventId) => {
     try {
-      await axiosInstance.delete(`/api/events/${eventId}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
+      await axiosInstance.delete(
+        `/api/events/${eventId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        }
+      );
 
-      setEvents(events.filter((event) => event._id !== eventId));
+      setEvents(
+        events.filter(
+          (event) => event._id !== eventId
+        )
+      );
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -31,24 +38,30 @@ const EventList = ({
 
   const handleRegister = async (eventId) => {
     try {
-      const response = await axiosInstance.post(
-        `/api/registrations/${eventId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
+      const response =
+        await axiosInstance.post(
+          `/api/registrations/${eventId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          }
+        );
+
+      setRegistrations(
+        (previousRegistrations) => [
+          ...previousRegistrations.filter(
+            (registration) =>
+              registration.eventId !== eventId
+          ),
+          response.data
+        ]
       );
 
-      setRegistrations((previousRegistrations) => [
-        ...previousRegistrations.filter(
-          (registration) => registration.eventId !== eventId
-        ),
-        response.data,
-      ]);
-
-      alert('Successfully registered for the event.');
+      alert(
+        'Successfully registered for the event.'
+      );
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -58,27 +71,34 @@ const EventList = ({
     }
   };
 
-  const handleCancelRegistration = async (eventId) => {
+  const handleCancelRegistration = async (
+    eventId
+  ) => {
     try {
-      const response = await axiosInstance.put(
-        `/api/registrations/${eventId}/cancel`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
+      const response =
+        await axiosInstance.put(
+          `/api/registrations/${eventId}/cancel`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          }
+        );
+
+      setRegistrations(
+        (previousRegistrations) =>
+          previousRegistrations.map(
+            (registration) =>
+              registration.eventId === eventId
+                ? response.data.registration
+                : registration
+          )
       );
 
-      setRegistrations((previousRegistrations) =>
-        previousRegistrations.map((registration) =>
-          registration.eventId === eventId
-            ? response.data.registration
-            : registration
-        )
+      alert(
+        'Registration cancelled successfully.'
       );
-
-      alert('Registration cancelled successfully.');
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -91,11 +111,14 @@ const EventList = ({
   return (
     <div>
       {events.map((event) => {
-        const isRegistered = registrations?.some(
-          (registration) =>
-            registration.eventId === event._id &&
-            registration.status === 'registered'
-        );
+        const isRegistered =
+          registrations?.some(
+            (registration) =>
+              registration.eventId ===
+                event._id &&
+              registration.status ===
+                'registered'
+          );
 
         return (
           <div
@@ -113,32 +136,52 @@ const EventList = ({
             <p className="text-sm text-[var(--muted-text)]">
               Deadline:{' '}
               {event.deadline
-                ? new Date(event.deadline).toLocaleDateString()
+                ? new Date(
+                    event.deadline
+                  ).toLocaleDateString()
                 : 'No deadline'}
             </p>
 
-            {user?.role === 'coordinator' && (
-              <div className="mt-2">
+            {user?.role ===
+              'coordinator' && (
+              <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   onClick={() =>
-                    navigate(`/events/${event._id}/registrations`)
+                    navigate(
+                      `/events/${event._id}/registrations`
+                    )
                   }
-                  className="mr-2 bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
+                  className="bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
                 >
                   Manage Attendance
                 </button>
 
                 <button
                   onClick={() =>
-                    navigate(`/events/${event._id}/edit`)
+                    navigate(
+                      `/events/${event._id}/feedback-list`
+                    )
                   }
-                  className="mr-2 bg-[var(--beige)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
+                  className="bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
+                >
+                  View Feedback
+                </button>
+
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/events/${event._id}/edit`
+                    )
+                  }
+                  className="bg-[var(--beige)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
                 >
                   Edit
                 </button>
 
                 <button
-                  onClick={() => handleDelete(event._id)}
+                  onClick={() =>
+                    handleDelete(event._id)
+                  }
                   className="bg-[var(--carbon-block)] text-[var(--porcelain)] px-4 py-2 rounded hover:opacity-90"
                 >
                   Delete
@@ -147,12 +190,14 @@ const EventList = ({
             )}
 
             {user?.role === 'volunteer' && (
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {isRegistered ? (
                   <>
                     <button
                       onClick={() =>
-                        handleCancelRegistration(event._id)
+                        handleCancelRegistration(
+                          event._id
+                        )
                       }
                       className="bg-[var(--beige)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
                     >
@@ -161,7 +206,9 @@ const EventList = ({
 
                     <button
                       onClick={() =>
-                        navigate(`/events/${event._id}/feedback`)
+                        navigate(
+                          `/events/${event._id}/feedback`
+                        )
                       }
                       className="bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
                     >
