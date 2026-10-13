@@ -147,16 +147,27 @@ const EventList = ({
             )}
 
             {user?.role === 'volunteer' && (
-              <div className="mt-2">
+              <div className="mt-2 flex gap-2">
                 {isRegistered ? (
-                  <button
-                    onClick={() =>
-                      handleCancelRegistration(event._id)
-                    }
-                    className="bg-[var(--beige)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
-                  >
-                    Cancel Registration
-                  </button>
+                  <>
+                    <button
+                      onClick={() =>
+                        handleCancelRegistration(event._id)
+                      }
+                      className="bg-[var(--beige)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
+                    >
+                      Cancel Registration
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        navigate(`/events/${event._id}/feedback`)
+                      }
+                      className="bg-[var(--pearl-leaf)] text-[var(--onyx)] px-4 py-2 rounded hover:opacity-90"
+                    >
+                      Leave Feedback
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={() =>

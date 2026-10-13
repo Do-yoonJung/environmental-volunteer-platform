@@ -97,6 +97,11 @@ app.use(
     require('./routes/attendanceRoutes')
 );
 
+app.use(
+    '/api/feedback',
+    require('./routes/feedbackRoutes')
+);
+
 if (require.main === module) {
     connectDB();
 
