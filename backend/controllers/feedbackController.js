@@ -104,7 +104,85 @@ const getEventFeedback = async (
   }
 };
 
+const getMyEventFeedback = async (
+  req,
+  res
+) => {
+  try {
+    if (req.user.role !== 'volunteer') {
+      return res.status(403).json({
+        message:
+          'Only volunteers can view their feedback'
+      });
+    }
+
+    const feedback = await Feedback.findOne({
+      eventId: req.params.eventId,
+      volunteerId: req.user.id
+    });
+
+    if (!feedback) {
+      return res.status(404).json({
+        message:
+          'Feedback not found for this event'
+      });
+    }
+
+    return res.json(feedback);
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
+const updateFeedback = async (
+  req,
+  res
+) => {
+  try {
+    const feedback = req.feedback;
+    const { rating, comment } = req.body;
+
+    const numericRating = Number(rating);
+
+    if (
+      !Number.isInteger(numericRating) ||
+      numericRating < 1 ||
+      numericRating > 5
+    ) {
+      return res.status(400).json({
+        message:
+          'Rating must be an integer between 1 and 5'
+      });
+    }
+
+    feedback.rating = numericRating;
+
+    feedback.comment =
+      typeof comment === 'string'
+        ? comment.trim()
+        : '';
+
+    await feedback.save();
+
+    return res.json({
+      message:
+        'Feedback updated successfully',
+      feedback
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   submitFeedback,
-  getEventFeedback
+  getEventFeedback,
+  getMyEventFeedback,
+  updateFeedback
 };
