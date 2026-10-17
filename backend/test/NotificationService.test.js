@@ -6,6 +6,7 @@ describe('NotificationService', () => {
     const registration = {
         _id: 'registration-123',
         volunteerId: {
+            _id: 'volunteer-456',
             name: 'Alex Volunteer',
             email: 'alex@example.com'
         },
@@ -45,7 +46,8 @@ describe('NotificationService', () => {
         assert.deepStrictEqual(logEntries, [{
             type: 'registration_confirmed',
             registrationId: 'registration-123',
-            recipient: 'alex@example.com',
+            volunteerId: 'volunteer-456',
+            recipient: 'a***@example.com',
             status: 'sent',
             attempts: 3,
             providerMessageId: 'message-123'
@@ -87,7 +89,8 @@ describe('NotificationService', () => {
         assert.deepStrictEqual(logEntries, [{
             type: 'event_reminder',
             registrationId: 'registration-123',
-            recipient: 'alex@example.com',
+            volunteerId: 'volunteer-456',
+            recipient: 'a***@example.com',
             status: 'sent',
             attempts: 1,
             providerMessageId: 'reminder-123'
@@ -122,6 +125,17 @@ describe('NotificationService', () => {
         assert.strictEqual(logEntries[0].status, 'failed');
         assert.strictEqual(logEntries[0].attempts, 3);
         assert.strictEqual(logEntries[0].error, 'SMTP unavailable');
+        assert.strictEqual(logEntries[0].recipient, 'a***@example.com');
+        assert.strictEqual(logEntries[0].volunteerId, 'volunteer-456');
+    });
+
+    it('masks email addresses before they reach the notification log', () => {
+        const { maskEmail } = NotificationService;
+
+        assert.strictEqual(maskEmail('alex@example.com'), 'a***@example.com');
+        assert.strictEqual(maskEmail('a@b.co'), 'a***@b.co');
+        assert.strictEqual(maskEmail('not-an-email'), '***');
+        assert.strictEqual(maskEmail(undefined), '***');
     });
 
     it('escapes user-provided values in the HTML confirmation', () => {
