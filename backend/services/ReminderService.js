@@ -29,6 +29,17 @@ class ReminderService {
                 continue;
             }
 
+            // FR-EN-08: respect the volunteer's reminder preference.
+            // Confirmation emails are unaffected; only reminders are skipped.
+            if (volunteer.remindersEnabled === false) {
+                results.push({
+                    registrationId: registration._id,
+                    status: 'skipped',
+                    reason: 'reminders disabled by volunteer'
+                });
+                continue;
+            }
+
             const deadline = new Date(event.deadline);
 
             const reminderTime = new Date(

@@ -1,3 +1,26 @@
+// NFR-EN-02 / NFR-EN-08: never write a full email address to the log.
+// 'alex@example.com' -> 'a***@example.com'
+const maskEmail = (email) => {
+    if (typeof email !== 'string' || !email.includes('@')) {
+        return '***';
+    }
+
+    const [local, domain] = email.split('@');
+    return `${local.charAt(0)}***@${domain}`;
+};
+
+// Registrations may arrive with volunteerId populated (a User document)
+// or as a bare ObjectId; log the id either way.
+const extractVolunteerId = (registration) => {
+    const volunteer = registration && registration.volunteerId;
+
+    if (!volunteer) {
+        return null;
+    }
+
+    return String(volunteer._id || volunteer);
+};
+
 class NotificationService {
     constructor(emailSender, templates, logRepo, options = {}) {
         this.emailSender = emailSender;
@@ -60,7 +83,8 @@ class NotificationService {
                     await this.logRepo.record({
                         type: notificationType,
                         registrationId: registration._id,
-                        recipient: message.to,
+                        volunteerId: extractVolunteerId(registration),
+                        recipient: maskEmail(message.to),
                         status: 'failed',
                         attempts: attempt,
                         error: error.message
@@ -79,7 +103,8 @@ class NotificationService {
                 await this.logRepo.record({
                     type: notificationType,
                     registrationId: registration._id,
-                    recipient: message.to,
+                    volunteerId: extractVolunteerId(registration),
+                    recipient: maskEmail(message.to),
                     status: 'sent',
                     attempts: attempt,
                     providerMessageId:
@@ -101,3 +126,4 @@ class NotificationService {
 }
 
 module.exports = NotificationService;
+module.exports.maskEmail = maskEmail;

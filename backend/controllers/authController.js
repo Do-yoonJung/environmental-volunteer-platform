@@ -55,6 +55,7 @@ const getProfile = async (req, res) => {
         role: user.role,
         university: user.university,
         address: user.address,
+        remindersEnabled: user.remindersEnabled !== false,
       });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -66,14 +67,20 @@ const updateUserProfile = async (req, res) => {
         const user = await User.findById(req.user.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const { name, email, university, address } = req.body;
+        const { name, email, university, address, remindersEnabled } = req.body;
         user.name = name || user.name;
         user.email = email || user.email;
         user.university = university || user.university;
         user.address = address || user.address;
 
+        // Only change the reminder preference when a real boolean is sent,
+        // so other profile updates never silently switch reminders on or off.
+        if (typeof remindersEnabled === 'boolean') {
+            user.remindersEnabled = remindersEnabled;
+        }
+
         const updatedUser = await user.save();
-        res.json({ id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, university: updatedUser.university, address: updatedUser.address, token: generateToken(updatedUser.id) });
+        res.json({ id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, university: updatedUser.university, address: updatedUser.address, remindersEnabled: updatedUser.remindersEnabled, token: generateToken(updatedUser.id) });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
