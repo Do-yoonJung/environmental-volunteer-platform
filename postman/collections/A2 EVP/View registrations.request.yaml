@@ -1,0 +1,58 @@
+$kind: http-request
+url: http://localhost:5001/api/registrations/me
+method: GET
+body:
+  type: json
+  content: "{\r
+
+    \    \"eventId\": \"{{eventID}}\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: "\r
+
+      pm.test(\"Status code is 200\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is under 1000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(1000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Content-Type is application/json\", function () {\r
+
+      \    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"ap\
+      plication/json\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body has required fields\", function () {\r
+
+      \    var jsonData = pm.response.json()[0];\r
+
+      \    pm.expect(jsonData).to.have.property(\"eventId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"volunteerId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"status\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"reminderSentAt\");\r
+
+      });"
+    language: text/javascript
+order: 12000

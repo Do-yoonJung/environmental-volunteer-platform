@@ -1,0 +1,69 @@
+$kind: http-request
+url: http://localhost:5001/api/feedback/{{feedbackId}}
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \  \"rating\": 4,\r
+
+    \  \"comment\": \"Updated: great day, but we ran short on gloves.\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response time is under 5000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(5000);
+      });
+
+      pm.test("Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      pm.test("Response body has required fields", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("message");
+          pm.expect(jsonData).to.have.property("feedback");
+          pm.expect(jsonData["feedback"]).to.have.property("_id");
+          pm.expect(jsonData["feedback"]).to.have.property("eventId");
+          pm.expect(jsonData["feedback"]).to.have.property("volunteerId");
+          pm.expect(jsonData["feedback"]).to.have.property("rating");
+          pm.expect(jsonData["feedback"]).to.have.property("comment");
+          pm.expect(jsonData["feedback"]).to.have.property("updatedAt");
+      });
+
+      pm.test("Correct message", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.message).to.equal("Feedback updated successfully");
+      });
+
+      pm.test("Same feedback record was updated", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.feedback._id).to.equal(pm.variables.get("feedbackId"));
+      });
+
+      pm.test("Rating and comment match the request", function () {
+          var jsonData = pm.response.json();
+          var body = JSON.parse(pm.request.body.raw);
+          pm.expect(jsonData.feedback.rating).to.equal(body.rating);
+          pm.expect(jsonData.feedback.comment).to.equal(body.comment.trim());
+      });
+
+      pm.test("Record was modified after creation", function () {
+          var jsonData = pm.response.json();
+          pm.expect(new Date(jsonData.feedback.updatedAt).getTime())
+              .to.be.above(new Date(jsonData.feedback.createdAt).getTime());
+      });
+    language: text/javascript
+order: 20000

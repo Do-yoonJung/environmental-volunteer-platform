@@ -1,0 +1,64 @@
+$kind: http-request
+name: Register for event
+url: http://localhost:5001/api/registrations/{{eventID}}
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"eventId\": \"{{eventID}}\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: "\r
+
+      pm.test(\"Status code is 400\", function () {\r
+
+      \    pm.response.to.have.status(400);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is under 1000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(1000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Content-Type is application/json\", function () {\r
+
+      \    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"ap\
+      plication/json\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body has required fields\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData).to.have.property(\"message\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Message is correct\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData.message).to.include(\"You are already registered
+      for this event\");\r
+
+      });"
+    language: text/javascript
+order: 11000

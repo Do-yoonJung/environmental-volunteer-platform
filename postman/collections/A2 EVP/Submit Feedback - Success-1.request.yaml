@@ -1,0 +1,74 @@
+$kind: http-request
+name: Submit Feedback - Success
+url: http://localhost:5001/api/feedback/{{eventID}}
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \  \"rating\": 5,\r
+
+    \  \"comment\": \"Great clean-up day, well organised.\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response time is under 5000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(5000);
+      });
+
+      pm.test("Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      pm.test("Response body has required fields", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("message");
+          pm.expect(jsonData).to.have.property("feedback");
+          pm.expect(jsonData["feedback"]).to.have.property("_id");
+          pm.expect(jsonData["feedback"]).to.have.property("eventId");
+          pm.expect(jsonData["feedback"]).to.have.property("volunteerId");
+          pm.expect(jsonData["feedback"]).to.have.property("rating");
+          pm.expect(jsonData["feedback"]).to.have.property("comment");
+          pm.expect(jsonData["feedback"]).to.have.property("createdAt");
+      });
+
+      pm.test("Correct message", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.message).to.equal("Feedback submitted successfully");
+      });
+
+      pm.test("Rating and comment match the request", function () {
+          var jsonData = pm.response.json();
+          var body = JSON.parse(pm.request.body.raw);
+          pm.expect(jsonData.feedback.rating).to.equal(body.rating);
+          pm.expect(jsonData.feedback.comment).to.equal(body.comment.trim());
+      });
+
+      pm.test("Feedback is linked to the event in the URL", function () {
+          var jsonData = pm.response.json();
+          var path = pm.request.url.path; // ["api","feedback",eventId]
+          pm.expect(jsonData.feedback.eventId).to.equal(path[2]);
+      });
+
+      pm.test("Rating is an integer between 1 and 5", function () {
+          var rating = pm.response.json().feedback.rating;
+          pm.expect(Number.isInteger(rating)).to.be.true;
+          pm.expect(rating).to.be.within(1, 5);
+      });
+
+      // Save for the Update Feedback test later
+      pm.environment.set("feedbackId", pm.response.json().feedback._id);
+    language: text/javascript
+order: 19000
