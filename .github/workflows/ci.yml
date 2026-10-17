@@ -2,9 +2,11 @@ name: Backend CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -56,21 +58,53 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: MONGO_URI
 
     steps:
+      - name: Validate Jess deployment secrets
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.JESS_SSH_PRIVATE_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST_JESS }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+        run: |
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::error::JESS_SSH_PRIVATE_KEY is empty or unavailable."
+            exit 1
+          fi
+
+          if [ -z "$EC2_HOST" ]; then
+            echo "::error::EC2_HOST_JESS is empty or unavailable."
+            exit 1
+          fi
+
+          if [ -z "$EC2_USERNAME" ]; then
+            echo "::error::EC2_USERNAME is empty or unavailable."
+            exit 1
+          fi
+
       - name: Configure SSH for Jess
         shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.JESS_SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.JESS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.EC2_HOST_JESS }}" >> ~/.ssh/known_hosts
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
 
       - name: Deploy application to Jess
         shell: bash
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST_JESS }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         run: |
-          ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_JESS }}" 'bash -se' <<'REMOTE_SCRIPT'
+          ssh \
+            -i "$HOME/.ssh/deploy_key" \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=20 \
+            "$EC2_USERNAME@$EC2_HOST" 'bash -se' <<'REMOTE_SCRIPT'
+          set -e
+
           cd /home/ubuntu/environmental-volunteer-platform
           git checkout main
           git pull --ff-only origin main
@@ -84,7 +118,6 @@ jobs:
 
           sudo rm -rf /var/www/html/*
           sudo cp -a /home/ubuntu/environmental-volunteer-platform/frontend/build/. /var/www/html/
-
           sudo systemctl reload apache2
 
           cd /home/ubuntu/environmental-volunteer-platform/backend
@@ -94,7 +127,8 @@ jobs:
 
       - name: Remove temporary SSH key
         if: always()
-        run: rm -f ~/.ssh/deploy_key
+        shell: bash
+        run: rm -f "$HOME/.ssh/deploy_key"
 
   deploy-jess2:
     name: Deploy to Jess2
@@ -102,21 +136,53 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: MONGO_URI
 
     steps:
+      - name: Validate Jess2 deployment secrets
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.JESS_SSH_PRIVATE_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST_JESS2 }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+        run: |
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::error::JESS_SSH_PRIVATE_KEY is empty or unavailable."
+            exit 1
+          fi
+
+          if [ -z "$EC2_HOST" ]; then
+            echo "::error::EC2_HOST_JESS2 is empty or unavailable."
+            exit 1
+          fi
+
+          if [ -z "$EC2_USERNAME" ]; then
+            echo "::error::EC2_USERNAME is empty or unavailable."
+            exit 1
+          fi
+
       - name: Configure SSH for Jess2
         shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.JESS_SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.JESS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.EC2_HOST_JESS2 }}" >> ~/.ssh/known_hosts
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
 
       - name: Deploy application to Jess2
         shell: bash
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST_JESS2 }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         run: |
-          ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_JESS2 }}" 'bash -se' <<'REMOTE_SCRIPT'
+          ssh \
+            -i "$HOME/.ssh/deploy_key" \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=20 \
+            "$EC2_USERNAME@$EC2_HOST" 'bash -se' <<'REMOTE_SCRIPT'
+          set -e
+
           cd /home/ubuntu/environmental-volunteer-platform
           git checkout main
           git pull --ff-only origin main
@@ -130,7 +196,6 @@ jobs:
 
           sudo rm -rf /var/www/html/*
           sudo cp -a /home/ubuntu/environmental-volunteer-platform/frontend/build/. /var/www/html/
-
           sudo systemctl reload apache2
 
           cd /home/ubuntu/environmental-volunteer-platform/backend
@@ -140,4 +205,5 @@ jobs:
 
       - name: Remove temporary SSH key
         if: always()
-        run: rm -f ~/.ssh/deploy_key
+        shell: bash
+        run: rm -f "$HOME/.ssh/deploy_key"
