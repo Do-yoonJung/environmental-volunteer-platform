@@ -1,0 +1,94 @@
+$kind: http-request
+url: http://localhost:5001/api/attendance/{{eventID}}/{{volunteerId}}
+method: PUT
+body:
+  type: json
+  content: "{\r\n  \"status\": \"absent\"\r\n}"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Status code is 200\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is under 5000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(5000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Content-Type is application/json\", function () {\r
+
+      \    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"ap\
+      plication/json\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body has required fields\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData).to.have.property(\"_id\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"eventId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"volunteerId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"status\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"createdAt\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"updatedAt\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Status updated to 'absent'\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData.status).to.equal(\"absent\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Attendance matches the event and volunteer in the URL\",
+      function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    var path = pm.request.url.path; //
+      [\"api\",\"attendance\",eventId,volunteerId]\r
+
+      \    pm.expect(jsonData.eventId).to.equal(path[2]);\r
+
+      \    pm.expect(jsonData.volunteerId).to.equal(path[3]);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Record was modified after creation\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(new Date(jsonData.updatedAt).getTime())\r
+
+      \        .to.be.above(new Date(jsonData.createdAt).getTime());\r
+
+      });"
+    language: text/javascript
+order: 28000

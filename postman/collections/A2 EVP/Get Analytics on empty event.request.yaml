@@ -1,0 +1,59 @@
+$kind: http-request
+url: http://localhost:5001/api/analytics/event/{{eventID}}
+method: GET
+headers:
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response time is under 5000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(5000);
+      });
+
+      pm.test("Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      pm.test("Response body has required fields", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("event");
+          pm.expect(jsonData).to.have.property("attendance");
+          pm.expect(jsonData).to.have.property("feedback");
+          pm.expect(jsonData["event"]).to.have.property("_id");
+          pm.expect(jsonData["event"]).to.have.property("title");
+      });
+
+      pm.test("Event matches the empty event", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.event._id).to.equal(pm.variables.get("eventID"));
+      });
+
+      pm.test("Attendance counts are all zero", function () {
+          var a = pm.response.json().attendance;
+          pm.expect(a.registered).to.equal(0);
+          pm.expect(a.present).to.equal(0);
+          pm.expect(a.absent).to.equal(0);
+      });
+
+      pm.test("Attendance rate is null, not 0 or NaN", function () {
+          var a = pm.response.json().attendance;
+          pm.expect(a.attendanceRate).to.be.null;
+          pm.expect(a.hasAttendanceData).to.be.false;
+      });
+
+      pm.test("Feedback is empty with null average", function () {
+          var f = pm.response.json().feedback;
+          pm.expect(f.feedbackCount).to.equal(0);
+          pm.expect(f.averageRating).to.be.null;
+          pm.expect(f.hasFeedbackData).to.be.false;
+      });
+    language: text/javascript
+order: 6000

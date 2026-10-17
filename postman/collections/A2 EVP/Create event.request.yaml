@@ -1,0 +1,68 @@
+$kind: http-request
+url: http://localhost:5001/api/events
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"title\": \"Create event test event\",\r
+
+    \    \"description\": \"IFN636\",\r
+
+    \    \"deadline\": \"2026-11-30T00:00:00.000Z\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: "\r
+
+      pm.test(\"Status code is 201\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is under 2000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(2000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Content-Type is application/json\", function () {\r
+
+      \    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"ap\
+      plication/json\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body has required fields\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData).to.have.property(\"userId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"title\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"description\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"completed\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"deadline\");\r
+
+      });\r
+
+      \r
+
+      pm.environment.set('eventID', pm.response.json()._id);"
+    language: text/javascript
+order: 5000

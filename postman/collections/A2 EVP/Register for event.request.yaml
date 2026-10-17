@@ -1,0 +1,59 @@
+$kind: http-request
+url: http://localhost:5001/api/registrations/{{eventID}}
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"eventId\": \"{{eventID}}\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: "\r
+
+      pm.test(\"Status code is 201\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is under 7000ms (to allow for the multiple
+      database operations)\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(7000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Content-Type is application/json\", function () {\r
+
+      \    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"ap\
+      plication/json\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body has required fields\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData).to.have.property(\"eventId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"volunteerId\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"status\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"reminderSentAt\");\r
+
+      });"
+    language: text/javascript
+order: 10000

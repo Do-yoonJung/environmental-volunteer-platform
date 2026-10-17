@@ -1,0 +1,123 @@
+$kind: http-request
+url: http://localhost:5001/api/feedback/event/{{eventID}}
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Status code is 200\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is under 5000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(5000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Content-Type is application/json\", function () {\r
+
+      \    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"ap\
+      plication/json\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body has required fields\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData).to.have.property(\"event\");\r
+
+      \    pm.expect(jsonData).to.have.property(\"feedback\");\r
+
+      \    pm.expect(jsonData[\"event\"]).to.have.property(\"_id\");\r
+
+      \    pm.expect(jsonData[\"event\"]).to.have.property(\"title\");\r
+
+      \    pm.expect(jsonData[\"feedback\"]).to.be.an(\"array\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Event matches the event in the URL\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    var path = pm.request.url.path; //
+      [\"api\",\"feedback\",\"event\",eventId]\r
+
+      \    pm.expect(jsonData.event._id).to.equal(path[3]);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Feedback list contains the submitted feedback\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    var ids = jsonData.feedback.map(function (f) { return f._id; });\r
+
+      \    pm.expect(jsonData.feedback.length).to.be.at.least(1);\r
+
+      \    pm.expect(ids).to.include(pm.environment.get(\"feedbackId\"));\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Each feedback item has the expected fields\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    jsonData.feedback.forEach(function (f) {\r
+
+      \        pm.expect(f).to.have.property(\"_id\");\r
+
+      \        pm.expect(f).to.have.property(\"eventId\");\r
+
+      \        pm.expect(f).to.have.property(\"volunteerId\");\r
+
+      \        pm.expect(f).to.have.property(\"rating\");\r
+
+      \        pm.expect(f).to.have.property(\"comment\");\r
+
+      \        pm.expect(f.rating).to.be.within(1, 5);\r
+
+      \    });\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Volunteer details are populated without sensitive data\",
+      function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    jsonData.feedback.forEach(function (f) {\r
+
+      \        pm.expect(f.volunteerId).to.be.an(\"object\");\r
+
+      \        pm.expect(f.volunteerId).to.have.property(\"name\");\r
+
+      \        pm.expect(f.volunteerId).to.have.property(\"email\");\r
+
+      \        pm.expect(f.volunteerId).to.not.have.property(\"password\");\r
+
+      \    });\r
+
+      });"
+    language: text/javascript
+order: 33000
