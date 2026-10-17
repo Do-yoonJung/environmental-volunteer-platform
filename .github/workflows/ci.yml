@@ -57,10 +57,20 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     environment: MONGO_URI
 
     steps:
+      - name: Display Jess runner IP and wait
+        shell: bash
+        run: |
+          RUNNER_IP=$(curl -fsS https://api.ipify.org)
+          echo "================================================"
+          echo "ADD THIS TO JESS SECURITY GROUP: $RUNNER_IP/32"
+          echo "================================================"
+          echo "Waiting 10 minutes for the SSH rule to be added..."
+          sleep 600
+
       - name: Validate Jess deployment secrets
         shell: bash
         env:
@@ -135,10 +145,20 @@ jobs:
     needs: deploy-jess
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     environment: MONGO_URI
 
     steps:
+      - name: Display Jess2 runner IP and wait
+        shell: bash
+        run: |
+          RUNNER_IP=$(curl -fsS https://api.ipify.org)
+          echo "================================================"
+          echo "ADD THIS TO JESS2 SECURITY GROUP: $RUNNER_IP/32"
+          echo "================================================"
+          echo "Waiting 10 minutes for the SSH rule to be added..."
+          sleep 600
+
       - name: Validate Jess2 deployment secrets
         shell: bash
         env:
