@@ -9,6 +9,7 @@ const Profile = () => {
     email: '',
     university: '',
     address: '',
+    remindersEnabled: true,
   });
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +26,7 @@ const Profile = () => {
           email: response.data.email,
           university: response.data.university || '',
           address: response.data.address || '',
+          remindersEnabled: response.data.remindersEnabled !== false,
         });
       } catch (error) {
         alert('Failed to fetch profile. Please try again.');
@@ -87,6 +89,15 @@ const Profile = () => {
           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
           className="w-full mb-4 p-2 border border-[var(--pearl-leaf)] rounded bg-white text-[var(--onyx)]"
         />
+        <label className="flex items-center gap-2 mb-4 text-[var(--onyx)]">
+          <input
+            type="checkbox"
+            checked={formData.remindersEnabled}
+            onChange={(e) => setFormData({ ...formData, remindersEnabled: e.target.checked })}
+            className="h-4 w-4"
+          />
+          <span>Email me a reminder before events I have registered for</span>
+        </label>
         <button type="submit" className="w-full bg-[var(--carbon-block)] text-[var(--porcelain)] p-2 rounded hover:bg-[var(--onyx)]">
           {loading ? 'Updating...' : 'Update Profile'}
         </button>

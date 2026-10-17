@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema({
     },
     university: { type: String },
     address: { type: String },
+    // Story 6 (FR-EN-08): volunteers can turn event reminder emails off.
+    // Confirmation emails are always sent regardless of this flag.
+    remindersEnabled: { type: Boolean, default: true },
 });
 
 userSchema.pre('save', async function (next) {
